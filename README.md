@@ -34,6 +34,17 @@ Identities (age keyfiles) live outside the repo:
 - system: `/etc/agenix/tuxedo.age` (root, 0400)
 - user: `~/.config/agenix/age2pierre.age` (0600)
 
+⚠️ **Back these up** (password-manager note is enough — the file content is a
+single `AGE-SECRET-KEY-1...` line). Without them the `.age` files are
+unreadable and the machine cannot be rebuilt. Restore with:
+
+```sh
+mkdir -p /etc/agenix ~/.config/agenix
+echo "AGE-SECRET-KEY-1..." | sudo tee /etc/agenix/tuxedo.age >/dev/null && sudo chmod 400 /etc/agenix/tuxedo.age
+echo "AGE-SECRET-KEY-1..." > ~/.config/agenix/age2pierre.age && chmod 600 ~/.config/agenix/age2pierre.age
+```
+(paths must match `age.identityPaths` in `configuration.nix` and `home.nix`)
+
 To edit or add a secret (from the repo root, where the rules file is found):
 ```sh
 nix run github:ryantm/agenix -- -e secrets/<name>.age -i ~/.config/agenix/age2pierre.age
