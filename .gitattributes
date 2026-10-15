@@ -1,0 +1,3 @@
+# git-crypt decommissioned 2026-10: secrets are now age-encrypted with
+# agenix (secrets/*.age) and safe to track as-is. Old history still
+# decrypts with the git-crypt key kept in .git/git-crypt/keys/default.

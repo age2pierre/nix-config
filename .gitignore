@@ -1,0 +1,9 @@
+.secret-key
+.secret-key-base64
+
+# Old git-crypt plaintext originals: kept on disk only as local backup
+# until the agenix migration is confirmed; the only tracked files here are
+# the .age ciphertexts and the rules file.
+secrets/*
+!secrets/*.age
+!secrets/agenix-rules.nix
