@@ -24,7 +24,38 @@
   # fixed upstream (the truncated branch now sets BTMTK_WMT_ON_UNDONE instead
   # of returning -EINVAL), so no extra patch needed. linux_7_0 was removed from
   # nixpkgs after reaching EOL upstream; 7.1 is the successor mainline series.
-  boot.kernelPackages = pkgs.linuxPackages_7_2;
+  # TODO(drop): tuxedo-drivers workaround for nixpkgs PR #571181 (kmodigest,
+  # landed in nixos-unstable @ 02c087f3): kernelModuleMakeFlags now contains
+  # cmd_sign=<kmodigest>$(space)$@ and tuxedo-drivers 4.20.1's Makefile
+  # re-expands $(MAKEFLAGS) through `bash -c` in its all/install/clean recipes —
+  # bash can't parse the literal `$(space)$@` and the build dies instantly.
+  # make transmits command-line overrides to recursive sub-makes via the
+  # MAKEFLAGS environment automatically, so the explicit $(MAKEFLAGS) in those
+  # recipes is redundant: strip it. The kernel sub-make (which defines `space`
+  # in Kbuild.include) then receives cmd_sign cleanly and modules_install signs
+  # every module with kmodigest → .ko.cer files required by the NixOS module
+  # aggregation (aggregateModules). Verify removal with:
+  #   nix build nixpkgs#linuxPackages_7_2.tuxedo-drivers
+  boot.kernelPackages = pkgs.linuxPackages_7_2.extend (self: super: {
+    tuxedo-drivers = super.tuxedo-drivers.overrideAttrs (old: {
+      postPatch = (old.postPatch or "") + ''
+        substituteInPlace Makefile \
+          --replace-fail ' $(MAKEFLAGS)' ""
+      '';
+      # modules_install runs depmod inside INSTALL_MOD_PATH, leaving stale
+      # modules.dep/*.bin maps next to the modules; aggregateModules re-runs
+      # depmod over the merged tree, and keeping both makes buildEnv fail with
+      # a conflicting-subpath error. modules.* and modules.builtin* are kept.
+      postInstall = (old.postInstall or "") + ''
+        rm -f "$out"/lib/modules/*/modules.dep* \
+          "$out"/lib/modules/*/modules.alias* \
+          "$out"/lib/modules/*/modules.softdep \
+          "$out"/lib/modules/*/modules.symbols* \
+          "$out"/lib/modules/*/modules.devname \
+          "$out"/lib/modules/*/modules.builtin*
+      '';
+    });
+  });
   boot.loader.systemd-boot = {
     enable = true;
     configurationLimit = 5;
