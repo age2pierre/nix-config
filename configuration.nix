@@ -513,6 +513,38 @@
 
   services.clamav.updater.enable = true;
 
+  # Tailscale
+  
+  services.tailscale.enable = true;
+
+  # Ovis (herdr-web-ui, 127.0.0.1:7317): publish to the tailnet over HTTPS so
+  # the phone can reach it (PWA install + push alerts need a secure context).
+  # `tailscale serve` persists in tailscaled state; this oneshot is a
+  # self-healing idempotent guard, not a per-boot requirement.
+  systemd.services.herdr-web-ui-serve = {
+    description = "Publish Ovis (herdr-web-ui) to the tailnet via tailscale serve";
+    after = ["tailscaled.service"];
+    wants = ["tailscaled.service"];
+    wantedBy = ["multi-user.target"];
+    path = [pkgs.tailscale];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      if tailscale serve status 2>/dev/null | grep -q "127.0.0.1:7317"; then
+        exit 0
+      fi
+      # tailscaled may need a few seconds after the unit ordering target.
+      tries=0
+      until tailscale serve --bg --https=443 http://127.0.0.1:7317 2>/dev/null; do
+        tries=$((tries + 1))
+        [ "$tries" -lt 5 ] || { echo "tailscale serve failed; check: tailscale status" >&2; exit 1; }
+        sleep 2
+      done
+    '';
+  };
+
   # Firewall
   networking.firewall.enable = true;
   networking.firewall.trustedInterfaces = ["docker0"];

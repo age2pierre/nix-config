@@ -41,6 +41,13 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Ovis (herdr-web-ui): browser/phone client for herdr. Pinned to a release
+    # tag (upstream main can be ahead of the latest release). Update = bump
+    # the tag, `nix flake update herdr-web-ui`, then just switch.
+    herdr-web-ui = {
+      url = "github:devswha/herdr-web-ui/v0.4.12";
+      flake = false;
+    };
   };
 
   outputs = {

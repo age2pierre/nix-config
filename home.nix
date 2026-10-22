@@ -546,6 +546,51 @@ in {
         true
       "
     '';
+
+    # Ovis (devswha/herdr-web-ui): materialize the flake-pinned source into a
+    # writable tree, build it with the Nix-provided bun, and link it into
+    # herdr. herdr plugin link runs no build commands, so the build happens
+    # here. Idempotent: the .nix-pinned-rev marker skips the ~1 min rebuild
+    # when the pinned rev is already built. Build failures are non-fatal
+    # (previous version keeps running; next `just switch` retries).
+    herdr-web-ui = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      set -eu
+      rev="${inputs.herdr-web-ui.rev}"
+      src="${inputs.herdr-web-ui}"
+      dest="$HOME/.local/share/herdr-web-ui"
+      stage="$dest.staging"
+      herdr="${pkgs.herdr}/bin/herdr"
+
+      if [ -f "$dest/.nix-pinned-rev" ] && [ "$(cat "$dest/.nix-pinned-rev")" = "$rev" ]; then
+        :
+      else
+        echo "Ovis: building pinned rev $rev"
+        rm -rf "$stage"
+        cp -a "$src"/. "$stage"/
+        chmod -R u+w "$stage"
+        # ~/.bun cache is reused across rebuilds; frozen lockfile for reproducibility.
+        (cd "$stage" && ${pkgs.bun}/bin/bun install --frozen-lockfile \
+          && ${pkgs.bun}/bin/bun run build) \
+          || { echo "Ovis: build failed; keeping previous version" >&2; rm -rf "$stage"; exit 0; }
+        echo "$rev" > "$stage/.nix-pinned-rev"
+        rm -rf "$dest.old"
+        [ -e "$dest" ] && mv "$dest" "$dest.old" || true
+        mv "$stage" "$dest"
+        rm -rf "$dest.old"
+      fi
+
+      # Re-register (unregister first: link over an existing id is refused).
+      "$herdr" plugin unlink devswha.herdr-web-ui >/dev/null 2>&1 || true
+      "$herdr" plugin link "$dest"
+
+      # Keep the flake pin authoritative: disable the in-app updater.
+      cfg_dir="$("$herdr" plugin config-dir devswha.herdr-web-ui)"
+      env_file="$cfg_dir/env"
+      touch "$env_file"
+      chmod 600 "$env_file"
+      grep -q '^HERDR_WEB_AUTO_UPDATE=' "$env_file" \
+        || printf 'HERDR_WEB_AUTO_UPDATE=0\n' >> "$env_file"
+    '';
   };
 
   programs.ghostty = {

@@ -20,6 +20,23 @@
         "type": "github"
       }
     },
+    "herdr-web-ui": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792307423,
+        "narHash": "sha256-TwmeSDag7iSGGmR1aTylNY4y3Dbfbk0FYr/dxMFl89A=",
+        "owner": "devswha",
+        "repo": "herdr-web-ui",
+        "rev": "1ed80e7913c4f904eb29d512aa252bf4b6480047",
+        "type": "github"
+      },
+      "original": {
+        "owner": "devswha",
+        "ref": "v0.4.12",
+        "repo": "herdr-web-ui",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -232,6 +249,7 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "herdr-web-ui": "herdr-web-ui",
         "home-manager": "home-manager",
         "niri": "niri",
         "nix-vscode-extensions": "nix-vscode-extensions",
