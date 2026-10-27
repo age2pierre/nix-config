@@ -76,24 +76,44 @@
     };
 
     # Local overlay: self-built packages (oh-my-pi) plus version overrides.
-    # bun 1.4.2: nixpkgs (even master @ 2026-09-01) still ships 1.3.13 — drop
-    # this override once nixpkgs lands >= 1.4.0.
-    # The wrapProgram prefix makes dlopen() of prebuilt glibc N-API addons work
-    # (e.g. @duckdb/node-bindings needs libstdc++.so.6/libgcc_s.so.1): this bun
-    # is a Nix-patched ELF, so it never uses nix-ld's NIX_LD_* shim, and a
+    # bun 1.4.4 (upstream 2026-10, https://github.com/oven-sh/bun/releases/tag/bun-v1.4.4):
+    # nixpkgs nixos-unstable still ships 1.4.2, so version-override the sources
+    # the same way nixpkgs' bun/package.nix defines them (per-platform fetchurl
+    # into `sources`); version feeds both the URL and passthru. Hashes verified
+    # against the release tags' GitHub asset digests.
+    # Keep the wrapProgram prefix: makes dlopen() of prebuilt glibc N-API addons
+    # work (e.g. @duckdb/node-bindings needs libstdc++.so.6/libgcc_s.so.1): this
+    # bun is a Nix-patched ELF, so it never uses nix-ld's NIX_LD_* shim, and a
     # runtime dlopen() only consults LD_LIBRARY_PATH/RUNPATH.
+    # Drop this override once nixpkgs lands >= 1.4.4.
     self-overlay = final: prev: {
       oh-my-pi = final.callPackage ./pkgs/oh-my-pi/default.nix {};
 
-      bun = prev.bun.overrideAttrs (old: {
-        postFixup =
-          (old.postFixup or "")
-          + ''
-            wrapProgram $out/bin/bun \
-              --prefix LD_LIBRARY_PATH : "${final.stdenv.cc.cc.lib}/lib"
-          '';
-      });
-
+      bun = let
+        version = "1.4.4";
+        sources = {
+          "x86_64-linux" = prev.fetchurl {
+            url = "https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-linux-x64-baseline.zip";
+            hash = "sha256-4ERutVmVdy65iUvrrppr42jZhai5Jx7hJEhvmUbu3XY=";
+          };
+          # aarch64-linux is in nixpkgs' meta.platforms; keep the attr coherent
+          "aarch64-linux" = prev.fetchurl {
+            url = "https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-linux-aarch64.zip";
+            hash = "sha256-uqa7NvUdblhWHgK76oJQOKnfRU9nPW13bou/hvjHhQ4=";
+          };
+        };
+      in
+        prev.bun.overrideAttrs (_old: {
+          inherit version;
+          src = sources.${prev.stdenv.hostPlatform.system}
+            or _old.src; # darwin: keep nixpkgs' own source (systems not covered by sources)
+          postFixup =
+            (_old.postFixup or "")
+            + ''
+              wrapProgram $out/bin/bun \
+                --prefix LD_LIBRARY_PATH : "${final.stdenv.cc.cc.lib}/lib"
+            '';
+        });
       # # ferdium 7.2.2 (upstream 2026-08-23): nixpkgs @ c27cdad still ships 7.1.2.
       # # Same .deb repack as nixpkgs' mkFranzDerivation — drop once nixpkgs >= 7.2.2.
       # ferdium = prev.ferdium.overrideAttrs (old: rec {
