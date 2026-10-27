@@ -291,7 +291,7 @@ in {
     # dotnet-sdk_10
     # powershell
     git-igitt # Interactive app for clear git graphs
-    serie# Rich git commit graph in your terminal
+    serie # Rich git commit graph in your terminal
     glow # Render markdown on the CLI
 
     #LSP
@@ -430,8 +430,8 @@ in {
     enable = true;
     package = pkgs.micro-full;
     settings = {
-        wordwrap= true;
-        softwrap= true;
+      wordwrap = true;
+      softwrap = true;
     };
   };
 
@@ -614,39 +614,35 @@ in {
     package = pkgs.herdr;
     settings = {
       onboarding = false;
+	  ui = {
+    	pane_gaps = false;
+        prompt_new_tab_name = false;
+      };
       keys = {
         prefix = "super+²";
         # --- tabs ---
-        new_tab = ["prefix+c" "ctrl+alt+c"];
-        previous_tab = ["prefix+p" "ctrl+alt+p"];
-        next_tab = ["prefix+n" "ctrl+alt+n"];
-        switch_tab = "prefix+1..9"; # unchanged default
+        new_tab = ["prefix+t" "ctrl+alt+t"];
+        split_vertical = ["prefix+n" "ctrl+alt+n"];
+        split_horizontal = ["prefix+j" "ctrl+alt+j"];
+        cycle_pane_next = ["prefix+tab" "ctrl+alt+!"];
+        navigate_workspace_up = ["ctrl+alt+up"]; 
+        navigate_workspace_down = ["ctrl+alt+down"];
+        close_pane = ["prefix+x" "ctrl+alt+x"];
+        previous_tab = ["prefix+left" "ctrl+alt+left"];
+        next_tab = ["prefix+right" "ctrl+alt+right"];
+
+        switch_tab = "prefix+1..9";
         rename_tab = "prefix+shift+t";
-        # close_tab stays default "prefix+shift+x"
-        # --- panes: arrows instead of the default vim h/j/k/l ---
-        # Direct chords (prefix-free) in addition to prefix+arrow. niri owns
-        # Mod(-super) chords only; ctrl+alt+arrows is free here (GNOME not in
-        # play under niri, no Ghostty/Konsole ctrl+alt defaults bound).
-        focus_pane_left = ["prefix+left" "ctrl+alt+left"];
-        focus_pane_right = ["prefix+right" "ctrl+alt+right"];
-        focus_pane_up = ["prefix+up" "ctrl+alt+up"];
-        focus_pane_down = ["prefix+down" "ctrl+alt+down"];
-        cycle_pane_next = "prefix+tab"; # unchanged default
-        # --- splits / pane lifecycle ---
-        # Prefix-free chords follow the herdr docs' "going prefix-free" recipe.
-        split_vertical = ["prefix+v" "ctrl+alt+d"];
-        split_horizontal = ["prefix+minus" "ctrl+alt+shift+d"];
-        close_pane = "prefix+x";
-        # zoom: prefix+z, direct ctrl+alt+z (zoom is the most-used toggle).
+        focus_pane_left = ["prefix+l" "ctrl+alt+l"];
+        focus_pane_right = ["prefix+m" "ctrl+alt+m"];
+        focus_pane_up = ["prefix+up"];
+        focus_pane_down = ["prefix+down"];
         zoom = ["prefix+z" "ctrl+alt+z"];
         resize_mode = "prefix+r";
-        # tmux-style direct resize: prefix, then ctrl+arrow
         resize_pane_left = "prefix+ctrl+left";
         resize_pane_right = "prefix+ctrl+right";
         resize_pane_up = "prefix+ctrl+up";
         resize_pane_down = "prefix+ctrl+down";
-        # copy_mode stays default "prefix+["
-        # --- workspaces & session ---
         workspace_picker = "prefix+w";
         goto = "prefix+g";
         new_workspace = "prefix+shift+n";
@@ -654,9 +650,6 @@ in {
         close_workspace = "prefix+shift+d";
         toggle_sidebar = "prefix+b";
         detach = "prefix+q";
-        # --- navigate mode (sidebar) ---
-        # h/j/k/l defaults dropped; arrows kept (left/right are permanent
-        # aliases and cannot be disabled).
       };
     };
   };
@@ -1053,8 +1046,7 @@ in {
     # decision-brief export). omp auto-discovers *.ts under this directory;
     # its legacy-pi compat loader rewrites the extension's `@mariozechner/*`
     # imports onto omp's bundled copies, so no node_modules needed.
-    ".omp/agent/extensions/brainstorm.ts".source =
-      "${ai.piBrainstorm}/extensions/brainstorm.ts";
+    ".omp/agent/extensions/brainstorm.ts".source = "${ai.piBrainstorm}/extensions/brainstorm.ts";
     ".gradle/gradle.properties" = {
       text = ''
         # NixOS: foojay-provisioned JDKs aren't patchelf'd, so disable auto-download.
