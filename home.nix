@@ -591,6 +591,20 @@ in {
       grep -q '^HERDR_WEB_AUTO_UPDATE=' "$env_file" \
         || printf 'HERDR_WEB_AUTO_UPDATE=0\n' >> "$env_file"
     '';
+
+    # herdr agent integrations: hooks that report native session IDs to herdr
+    # so agent panes (omp, claude, opencode) resume their conversations after
+    # a server restart (session.resume_agents_on_restore). Install is
+    # idempotent (status shows "installed"); run once per switch so a herdr
+    # update rewrites the hooks with matching integration versions.
+    herdr-agent-integrations = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      herdr="${pkgs.herdr}/bin/herdr"
+      # One target per invocation: `herdr integration install` takes a single
+      # <TARGET> argument.
+      "$herdr" integration install omp
+      "$herdr" integration install claude
+      "$herdr" integration install opencode
+    '';
   };
 
   programs.ghostty = {
@@ -614,9 +628,22 @@ in {
     package = pkgs.herdr;
     settings = {
       onboarding = false;
-	  ui = {
-    	pane_gaps = false;
+      experimental = {
+        # Replay recent pane contents (scrollback) after a full server restart.
+        # Stored in plaintext at ~/.config/herdr/session-history.json — treat
+        # the herdr config dir like terminal history (docs/session-state).
+        pane_history = true;
+      };
+      ui = {
+        pane_gaps = false;
         prompt_new_tab_name = false;
+      };
+      # Native agent session restore after a server restart (omp, claude,
+      # opencode, … via herdr integrations). Defaults true/100; pinned to
+      # document intent.
+      session = {
+        resume_agents_on_restore = true;
+        startup_per_agent_delay_ms = 100;
       };
       keys = {
         prefix = "super+²";
@@ -1121,9 +1148,10 @@ in {
         question = "allow";
       };
     };
-    tui = {
-      theme = "opencode";
-    };
+    # No `tui` block: opencode v2 reads cli.json (migrated from v1 tui.json)
+    # and defaults to the "opencode" theme. A HM-managed tui.json here would
+    # be a read-only store symlink that blocks `herdr integration install
+    # opencode` from registering its TUI plugin.
   };
 
   # VSCode: default profile (no Java/Nix-specific extensions) plus `java`
