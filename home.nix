@@ -592,6 +592,18 @@ in {
         || printf 'HERDR_WEB_AUTO_UPDATE=0\n' >> "$env_file"
     '';
 
+    # herdr-sidebar (alexarthurs): VS Code-style sidebar (file explorer +
+    # source control) linked into herdr. `plugin link` runs no build commands
+    # (docs plugins.mdx), so the release binary is fetched via flake (see the
+    # herdr-sidebar overlay in flake.nix); no cargo/network at switch time.
+    # Unlink first: relinking an already-registered id is refused.
+    herdr-sidebar = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      set -eu
+      herdr="${pkgs.herdr}/bin/herdr"
+      "$herdr" plugin unlink herdr-sidebar >/dev/null 2>&1 || true
+      "$herdr" plugin link "${pkgs.herdr-sidebar}"
+    '';
+
     # herdr agent integrations: hooks that report native session IDs to herdr
     # so agent panes (omp, claude, opencode) resume their conversations after
     # a server restart (session.resume_agents_on_restore). Install is
@@ -652,7 +664,7 @@ in {
         split_vertical = ["prefix+n" "ctrl+alt+n"];
         split_horizontal = ["prefix+j" "ctrl+alt+j"];
         cycle_pane_next = ["prefix+tab" "ctrl+alt+!"];
-        navigate_workspace_up = ["ctrl+alt+up"]; 
+        navigate_workspace_up = ["ctrl+alt+up"];
         navigate_workspace_down = ["ctrl+alt+down"];
         close_pane = ["prefix+x" "ctrl+alt+x"];
         previous_tab = ["prefix+left" "ctrl+alt+left"];
@@ -677,6 +689,25 @@ in {
         close_workspace = "prefix+shift+d";
         toggle_sidebar = "prefix+b";
         detach = "prefix+q";
+        # Custom shell commands ([[keys.command]] in rendered TOML): open the
+        # herdr-sidebar plugin pane (VS Code-style explorer/source-control).
+        command = [
+          {
+            key = ["prefix+e" "ctrl+alt+e"];
+            type = "shell";
+            command = "herdr plugin action invoke herdr-sidebar.open-sidebar";
+          }
+          {
+            key = ["prefix+h" "ctrl+alt+g"];
+            type = "shell";
+            command = "herdr plugin action invoke herdr-sidebar.open-git";
+          }
+          {
+            key = ["prefix+p" "ctrl+alt+p"];
+            type = "shell";
+            command = "herdr plugin action invoke herdr-sidebar.quick-open";
+          }
+        ];
       };
     };
   };

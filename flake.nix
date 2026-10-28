@@ -48,6 +48,14 @@
       url = "github:devswha/herdr-web-ui/v0.4.12";
       flake = false;
     };
+    # herdr-sidebar (alexarthurs): VS Code-style sidebar (explorer + source
+    # control) for herdr, pinned to a release tag whose x86_64-linux-musl
+    # binary the overlay below fetches. Update = bump the tag, the release
+    # URL/hash in the overlay, then `nix flake update herdr-sidebar`.
+    herdr-sidebar = {
+      url = "github:alexarthurs/herdr-sidebar/v0.15.1";
+      flake = false;
+    };
   };
 
   outputs = {
@@ -73,6 +81,22 @@
     };
     pkgs-jdk24 = import nixpkgs-jdk24 {
       inherit system;
+    };
+
+    # herdr-sidebar (alexarthurs): assemble the plugin tree (manifest + scripts
+    # from the flake-pinned checkout) with the official x86_64-linux-musl
+    # release binary (SHA-256 from the release's SHA256SUMS asset) at the
+    # target/release/ path its herdr-plugin.toml pane/action commands expect.
+    herdr-sidebar-overlay = final: prev: {
+      herdr-sidebar = final.runCommand "herdr-sidebar" {} ''
+        mkdir -p $out/target/release
+        cp -a "${inputs.herdr-sidebar}/plugins/herdr-sidebar/." $out/
+        chmod -R u+w $out
+        install -Dm 755 ${final.fetchurl {
+          url = "https://github.com/alexarthurs/herdr-sidebar/releases/download/v0.15.1/herdr-sidebar-x86_64-unknown-linux-musl";
+          hash = "sha256-12YXsEbGnCFpAbqwqicv4XdKuASUb+oFIHvC2JKPZLo=";
+        }} $out/target/release/herdr-sidebar
+      '';
     };
 
     # Local overlay: self-built packages (oh-my-pi) plus version overrides.
@@ -158,6 +182,7 @@
                 })
                 # Exposes pkgs.niri-stable / pkgs.niri-unstable.
                 inputs.niri.overlays.niri
+                herdr-sidebar-overlay
                 self-overlay
               ];
             }

@@ -20,6 +20,23 @@
         "type": "github"
       }
     },
+    "herdr-sidebar": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791547735,
+        "narHash": "sha256-6lHSzGKzh6ef6rQXy43BHZgIMhBC4YVs3tDTqW0pRzU=",
+        "owner": "alexarthurs",
+        "repo": "herdr-sidebar",
+        "rev": "db78187ea7a965ab7e82ba555a7c932b2bf59919",
+        "type": "github"
+      },
+      "original": {
+        "owner": "alexarthurs",
+        "ref": "v0.15.1",
+        "repo": "herdr-sidebar",
+        "type": "github"
+      }
+    },
     "herdr-web-ui": {
       "flake": false,
       "locked": {
@@ -249,6 +266,7 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "herdr-sidebar": "herdr-sidebar",
         "herdr-web-ui": "herdr-web-ui",
         "home-manager": "home-manager",
         "niri": "niri",
