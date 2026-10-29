@@ -666,7 +666,7 @@ in {
         cycle_pane_next = ["prefix+tab" "ctrl+alt+!"];
         navigate_workspace_up = ["ctrl+alt+up"];
         navigate_workspace_down = ["ctrl+alt+down"];
-        close_pane = ["prefix+x" "ctrl+alt+x"];
+        close_tab = ["prefix+x" "ctrl+alt+x"];
         previous_tab = ["prefix+left" "ctrl+alt+left"];
         next_tab = ["prefix+right" "ctrl+alt+right"];
 
@@ -693,7 +693,7 @@ in {
         # herdr-sidebar plugin pane (VS Code-style explorer/source-control).
         command = [
           {
-            key = ["prefix+e" "ctrl+alt+e"];
+            key = ["prefix+p" "ctrl+alt+p"];
             type = "shell";
             command = "herdr plugin action invoke herdr-sidebar.open-sidebar";
           }
@@ -703,7 +703,7 @@ in {
             command = "herdr plugin action invoke herdr-sidebar.open-git";
           }
           {
-            key = ["prefix+p" "ctrl+alt+p"];
+            key = ["prefix+o" "ctrl+alt+o"];
             type = "shell";
             command = "herdr plugin action invoke herdr-sidebar.quick-open";
           }
